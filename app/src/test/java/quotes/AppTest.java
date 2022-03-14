@@ -6,11 +6,13 @@ package quotes;
 import com.google.gson.Gson;
 import org.junit.jupiter.api.Test;
 
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
+import java.net.HttpURLConnection;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.Objects;
 import java.util.Random;
+import java.util.Scanner;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -31,13 +33,147 @@ class AppTest {
         String[] args ={"contains","angel"};
         assertTrue(quotesAndAuthorsArray[0].getText().contains(args[1]));
     }
-    public static FileReader ReadJsonFile(String filename) {
+    ///////////////////////////////// Lab 9 Test ////////////////////////////////
+    @Test void TestReadFromAPI() throws FileNotFoundException {
+            String data = ReadFromAPI();
+            assertTrue(data.contains("text"));
+        assertTrue(data.contains("author"));
+
+    }
+
+    @Test void UpdateOntheJSonFile() throws FileNotFoundException {
+       Boolean flag = false;
+        String data = ReadFromAPI();
+        Gson gson = new Gson();
+        quotesAndAuthor test = gson.fromJson(data,quotesAndAuthor.class);
+        String datainFile = gson.toJson(test);
+
+        File localFile = new File("./localTest.json");///////////////////////////// heek done terminal
+        Scanner scanner = new Scanner(localFile);
+        while(scanner.hasNextLine()){
+            String line = scanner.nextLine();
+            if(line.contains(datainFile)){
+                flag = true;
+                break;
+            }
+        }
+        assertTrue(flag);
+    }
+    @Test void ReadFromUpdatedFile() throws FileNotFoundException {
+        Boolean flag = false;
+        String data = ReadFromAPI();
+        quotesAndAuthor result = ReadFromJsonFileUpdated(); // Read From File If OFFLINE //
+        Gson gson = new Gson();
+        String dataFromFile = gson.toJson(result);
+
+        File localFile = new File("./localTest.json");///////////////////////////// heek done terminal
+        Scanner scanner = new Scanner(localFile);
+        while(scanner.hasNextLine()){
+            String line = scanner.nextLine();
+            if(line.contains(dataFromFile)){
+                flag = true;
+                break;
+            }
+        }
+        assertTrue(flag);
+
+    }
+
+    //////////////////////////////////////////// LAB 9 /////////////////////////////////////////////////////////
+    /* Method Make the connection and get the data as json Format And called Method UpdateOntheJSonFile
+
+      If the connection not made then >> Method ReadFromJsonFileUpdated
+    */
+
+    public static String ReadFromAPI() throws FileNotFoundException {
+        String dataJson="";
+        try {
+            // Make connection
+            URL quotesURL = new URL("http://api.forismatic.com/api/1.0/?method=getQuote&format=json&lang=en");
+
+            HttpURLConnection quotesURLconnection = (HttpURLConnection) quotesURL.openConnection();
+            // send GET request
+            quotesURLconnection.setRequestMethod("GET");
+            // Read the Response
+            InputStreamReader quotesURLReader = new InputStreamReader(quotesURLconnection.getInputStream());
+            BufferedReader quotesURLbuffered = new BufferedReader(quotesURLReader);
+            // Get the data
+            dataJson = quotesURLbuffered.readLine();
+            //  System.out.println("Data recieve from the API >>> "+dataJson);
+
+            dataJson = dataJson.replace("quoteText", "text");
+            dataJson = dataJson.replace("quoteAuthor", "author");
+            // System.out.println("Data recieve from the API After changed >>> "+dataJson);
+            UpdateOntheJSonFile(dataJson); // Add the data to the File
+        }catch (Exception e){
+            quotesAndAuthor result = ReadFromJsonFileUpdated(); // Read From File If OFFLINE //
+            System.out.println("The Quote From File >>> " + result);
+
+        }
+        return dataJson;
+    }
+    /*
+      Read the File and get the array of objects from this file "ArrayOfquotesAndAuthor Method"
+      create a new array in bigger size to add the new data we got from the API
+      Write the Array togson in the File For using if the connection not established
+     */
+    public static void UpdateOntheJSonFile(String dataJson) throws IOException {
+        FileReader jsonFileReader = ReadJsonFile("qoutesTest.json"); // Read the File
+        quotesAndAuthor[] quotesAndAuthorsArray = ArrayOfquotesAndAuthor(jsonFileReader); // Convert from Json format to Object Array
+        //Create a new Array in bigger size to add the new randome object
+        quotesAndAuthor[] NewquotesAndAuthorsArray = new quotesAndAuthor[quotesAndAuthorsArray.length+1];
+
+        Gson gson = new Gson();
+        quotesAndAuthor quotesdata = gson.fromJson(dataJson, quotesAndAuthor.class); //  Convert To Object From JSON Format
+        System.out.println("The Quote From API >>> " + quotesdata);
+
+        // Add the all object in the file to the new Array
+        for (int i = 0; i < quotesAndAuthorsArray.length; i++) {
+            NewquotesAndAuthorsArray[i] = quotesAndAuthorsArray[i];
+        }
+        // Add the new Object to the Array
+        NewquotesAndAuthorsArray[NewquotesAndAuthorsArray.length -1]=quotesdata;
+//            for (quotesAndAuthor obj:
+//                 NewquotesAndAuthorsArray) {
+//                System.out.println(obj);
+//                System.out.println("////////////////////////");
+//            }
+        //////////////////////////////////////////////////////////////////////////////
+        // Write the Array to the File :
+        File localFile = new File("./localTest.json");///////////////////////////// heek done terminal
+        try (FileWriter localFileWriter = new FileWriter(localFile)) {
+            gson.toJson(NewquotesAndAuthorsArray,localFileWriter);
+        }
+    }
+    /*
+    If the connection did not establish then will read From the File to get random quote .
+     */
+    public static quotesAndAuthor ReadFromJsonFileUpdated() throws FileNotFoundException {
+        File localFile = new File("./localTest.json");///////////////////////////// heek done terminal
+//        File file = new File(
+//                App.class.getClassLoader().getResource("local.json").getFile()
+//        );/////////////////////////////
+        FileReader jsonFileReader = new FileReader(localFile);
+        quotesAndAuthor[] quotesAndAuthorsArray = ArrayOfquotesAndAuthor(jsonFileReader); // Convert from Json format to Object Array
+        int randomNumber = GetRandomNumber(quotesAndAuthorsArray.length);
+        quotesAndAuthor result = quotesAndAuthorsArray[randomNumber];
+        return result;
+
+    }
+    //////////////////////////////////// Lab 8 ////////////////////////////////////////
+
+    public static FileReader ReadJsonFile(String filename) { ///////////////////////////////////// Read Json File
         FileReader filereader = null;
+
         try {
             // Read From Resource Folder
             String filenameResource = Objects.requireNonNull(Thread.currentThread().getContextClassLoader()
                     .getResource(filename)).getFile();
             filereader = new FileReader(filenameResource);
+            //Read From Root Folder
+//            File file = new File("./"+filename);
+//            System.out.println(file);
+//            filereader = new FileReader(file);
 
         } catch (IOException exception) {
             exception.printStackTrace();
@@ -46,10 +182,23 @@ class AppTest {
     }
 
     // Read https://buildcoding.com/parse-json-file-with-gson-library-in-java/
-    public static  quotesAndAuthor[] ArrayOfquotesAndAuthor(FileReader jsonFileReader){
+    public static  quotesAndAuthor[] ArrayOfquotesAndAuthor(FileReader jsonFileReader){ ////////////////// convert to object Array
         Gson gson = new Gson();
         quotesAndAuthor[] quotesAndAuthorsArray = gson.fromJson(jsonFileReader, quotesAndAuthor[].class);
+//        for (quotesAndAuthor result :
+//                quotesAndAuthorsArray) {
+//            System.out.println(result.getAuthor());
+//            System.out.println(result.getText());
+//            System.out.println(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>");
+//        }
         return quotesAndAuthorsArray;
     }
-
+    // Read https://www.educative.io/edpresso/how-to-generate-random-numbers-in-java
+    public static int GetRandomNumber(int arrayLength){
+        //System.out.println(arrayLength);
+        Random random = new Random();
+        int randomNumber = random.nextInt(arrayLength);
+        //System.out.println(randomNumber);
+        return randomNumber;
+    }
 }

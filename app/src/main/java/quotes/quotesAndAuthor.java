@@ -1,5 +1,7 @@
 package quotes;
 
+import java.util.ArrayList;
+
 public class quotesAndAuthor {
     String text;
     String author;
@@ -17,11 +19,20 @@ public class quotesAndAuthor {
         return author;
     }
 
+
     @Override
     public String toString() {
-        return "quotes And Author{ \n\n" +
-                "Text='" + text + '\''+'\n' +'\n'+
-                "Author='" + author + '\'' +
+        return "quotesAndAuthor{" +
+                "Quotes='" + text + '\'' +
+                ", Author='" + author + '\'' +
                 '}';
     }
+    //
+//    @Override
+//    public String toString() {
+//        return "quotes And Author{ \n\n" +
+//                "Text='" + text + '\''+'\n' +'\n'+
+//                "Author='" + author + '\'' +
+//                '}';
+//    }
 }

@@ -7,15 +7,21 @@
 
 * **ArrayOfquotesAndAuthor** Method : take the FileReader as parameter and convert the FileReader to array of class  quotesAndAuthor and Return this Array.  
 
-* **GetRandomNumber** Method : generate a Random numbet and use it to print random Author and quotes each time the App running.
+* **GetRandomNumber** Method : generate a Random number and use it to print random Author and quotes each time the App running.
+............... 
+* **ReadFromAPI** Method : connect to the API and get the data and use this Method **UpdateOntheJSonFile** , if catch Exception then will Read From Json File.   
+* **UpdateOntheJSonFile** Method : Read the json file and get the array of objects from this file "ArrayOfquotesAndAuthor Method"  
+      create a new array in bigger size to add the new data we got from the API  
+      Write the Array toJson in the File For using if the connection not established  
+* **ReadFromJsonFileUpdated** Method : Read the json file and return randome object from it if there is problem in connect to the API.  
+
 
 ## How the App work ? 
-* Read From the File, Convert Json Format to Object and print object randomly.  
-![run](./Image/run.PNG)  
+* connect to the API and get the json data and print the quotes and Author.   
+![API](./Image/API.PNG)  
+* Update on the Json file and add this data on it.  
+* If there is a problem in the connection then will read from the json File and print a random quotes and Author.  
+![file](./Image/file.PNG)  
+
   
-* Type in an author (on the command line) and return a quote by that author.  
-![author](./Image/Author.PNG)  
-   
-* type in a word (on the command line) and return a quote that contains that word.  
-![conatins](./Image/contains.PNG)  
 
